@@ -1,0 +1,285 @@
+from streamlit import *
+from  matplotlib import *
+# breast cancer
+from pandas import*
+from plotly.express import*
+from numpy import*
+from seaborn import*
+from scipy.stats import*
+from sklearn.preprocessing import*
+from sklearn.linear_model import*
+from sklearn.svm import*
+from sklearn.tree import*
+from sklearn.ensemble import*
+from PIL import*
+from sklearn.metrics import*
+from sklearn.model_selection import*
+
+title("TUMOR TYPE PREDICTING MODEL")
+write("THIS MODEL IS DESIGNED TO PERDICT THE DAIGNOSIS OF CANCEROUS TUMOR IN CANCER PATIENTS ")
+# i= open(r"C:\Users\USER\Downloads\Cancer.jpeg")
+
+
+# image(
+#     i,
+#     caption="Cancer"
+# )
+markdown("## Powered by Fabio Tech")
+subheader("PATIENT'S DETAILS")
+sidebar.subheader("PATIENT'S DETAILS")
+name=[]
+n=sidebar.text_input("Give us your name")
+
+name.append(n)
+
+Patient_id=[]
+m=sidebar.number_input("Key in your customer id ; it should exactly 8 characters")
+Patient_id.append(m)
+
+Age=[]
+o=sidebar.slider("PATIENT'S AGE",1,150,step=1)
+Age.append(o)
+
+
+date_of_apointment=[]
+p= sidebar.text_input("date; follow  this pattern: (YYYY/MM/DD)")
+date_of_apointment.append(p)
+if (len(date_of_apointment[0])<10)| (len(date_of_apointment[0])>10):
+    sidebar.error("Wrong entry!!!") 
+elif len(date_of_apointment[0])==10:
+    sidebar.success("Correct!!")
+
+Gender=[]
+q=sidebar.radio("gender",["Female","Male"])
+Gender.append(q)
+
+Geno_type=[]
+s=sidebar.radio("Blood geno type",["O+","A+","B+","O-","A-","B-"])
+Geno_type.append(s)
+
+Blood_group=[]
+r=sidebar.radio("Blood group",("AA","AS","SS"))
+Blood_group.append(r)
+
+
+cancer=["brain","liver","skin","prostate","lungs"," mouth","throat","blood","cervix","not in the list"]
+cancer_cell_position=[]
+t=sidebar.radio("Cancer of the:",cancer)
+if t=="not in the list":
+    sidebar.warning("Ho! sorry")
+    new_cancer =sidebar.text_input("give me the name of the affected body part")
+    new_cancer=new_cancer.lower()
+    cancer.append(new_cancer)
+    t=new_cancer
+    cancer_cell_position.append(t)
+else:
+    cancer_cell_position.append(t)
+
+def para():
+    sidebar.subheader("PARAMETERS FOR DIAGNOSIS")
+
+    fractal_dimension_worst_cell=[]
+    a=sidebar.number_input("fractal dimension worst cell value (range: 0.001-3 ) :")
+
+
+    fractal_dimension_worst_cell.append(a)
+
+    compact_section_of_cell=[]
+    b=sidebar.number_input("compact section value (range: 0.001-3 ) :")
+    compact_section_of_cell.append(b)
+
+    compactness_of_worst_cell=[]
+    c=sidebar.number_input("compactness worst cell value (range: 0.001-3 ):")
+
+    compactness_of_worst_cell.append(c)
+
+    area_of_worst_affected_cell=[]
+    d=sidebar.slider("area of worst affected cell", 1, 10000,1000)
+    area_of_worst_affected_cell.append(d)
+
+    texture_of_worst_cell=[]
+    e=sidebar.slider("texture of worst cell", 1,70,15)
+    texture_of_worst_cell.append(e)
+
+    average_compactness_of_cells=[]
+    f=sidebar.number_input("average compactness of cells value :")
+    average_compactness_of_cells.append(f)
+
+
+    average_area_of_affected_cells=[]
+
+    g=sidebar.slider("average area of affected cells",1, 10000,2)
+    average_area_of_affected_cells.append(g)
+
+    average_texture_of_cells=[]
+    h=sidebar.slider("average texture of cells", 1, 500,2)
+    average_texture_of_cells.append(h)
+
+
+
+    new_cancer_record={'fractal_dimension_worst':fractal_dimension_worst_cell,'area_worst':area_of_worst_affected_cell,
+                       'compactness_worst':compactness_of_worst_cell,'texture_worst':texture_of_worst_cell,
+                       'compactness_se':compact_section_of_cell,'compactness_mean':average_compactness_of_cells,
+
+                    'area_mean':average_area_of_affected_cells,'texture_mean':average_texture_of_cells,}
+    new_record = DataFrame(new_cancer_record)
+
+
+    return new_record
+
+
+new_cancer_record=para()
+new_cancer_record.to_csv("new_cancer_record.csv")
+write(new_cancer_record)
+new=read_csv("new_cancer_record.csv")
+new.drop("Unnamed: 0",axis=1,inplace=True)
+
+## converting object column from the table into 0 and 1 using label encoder
+
+
+ 
+## converting numerical column from the table into standard scaler
+n=new.select_dtypes("number")
+
+
+# x_test=StandardScaler().fit_transform(num)
+
+
+
+## seperating numerical column name in new_cancer_record  that was used  for traning the depolyed as test column
+
+
+
+
+
+
+
+## Deploying model
+df=read_csv(r"C:\Users\USER\Downloads\Cancer_Data.csv")
+df=df.drop(["Unnamed: 32","id"],axis=1)
+df.reset_index(drop=True,inplace=True)
+
+for i in df.select_dtypes(object).columns:
+    df[i]=LabelEncoder().fit_transform(df[[i]])
+
+
+ytarget=df["diagnosis"]
+x=df[['fractal_dimension_worst','area_worst','compactness_worst','texture_worst',
+      'compactness_se','compactness_mean','area_mean','texture_mean']]
+
+
+
+model=GradientBoostingClassifier().fit(x,ytarget)
+pred=model.predict(x)
+pro=model.predict_proba(n)
+subheader("Model Probability Prediction")
+write(pro)
+subheader("Prediction Result")
+pred=model.predict(n)
+if pred==1:
+    new["diagnosis"]="Malignant"
+
+    write(new["diagnosis"])
+if pred==0:
+    new["diagnosis"]="Benign"
+    write(new["diagnosis"])
+
+
+
+a ={"name":name,"Patient's id":Patient_id,"Age":Age,"date of apointment":date_of_apointment,
+
+                       "Gender":Gender,"Geno type":Geno_type,"Blood group":Blood_group,
+                    "cancer cell position":cancer_cell_position}
+ma=DataFrame(a)
+
+
+#visualization
+
+df=read_csv(r"C:\Users\USER\Downloads\Cancer_Data.csv")
+df.reset_index(drop=True,inplace=True)
+a=df.select_dtypes("number")
+df["diagnosis"]=df["diagnosis"].map({"M":"Malignant","B":"Benign"})
+subheader("DATA VISUALIZATION")
+write("MODEL ACCURACY(Cross Validation Score)")
+write(DataFrame(cross_val_score(GradientBoostingClassifier().fit(x,ytarget),x,ytarget,cv=5)))
+
+
+for i in df.select_dtypes("number").columns:
+  df[i]=MinMaxScaler().fit_transform(df[[i]])
+  fig=violin(df,x="diagnosis",y="area_mean",color="diagnosis", title="A Plot Of Average Area of affected Cells VS Diagnosis")
+write(fig)
+
+fig=scatter(df,x="area_mean",y="compactness_mean",color="diagnosis",color_discrete_map=({"Malignant":"White","Benign":"Darkblue",}) ,title="A Plot Of Average Compactness of cells VS Area of affected Cells")
+write(fig)
+fig=scatter_3d(df,x="area_mean",y="compactness_mean",z="texture_worst",color="diagnosis",color_discrete_map=({"Malignant":"White","Benign":"Darkblue",}) ,title="A Plot Of Average Compactness of cells VS Area of affected Cells")
+write(fig)
+
+
+x=df.groupby("diagnosis")[['fractal_dimension_worst','area_worst','compactness_worst',
+                           'texture_worst','compactness_se','compactness_mean','area_mean','texture_mean']].mean()
+
+
+de=DataFrame(x)
+de.reset_index(inplace=True)
+da=de.pivot_table(index="diagnosis",values=['fractal_dimension_worst','area_worst','compactness_worst','texture_worst','compactness_se','compactness_mean','area_mean','texture_mean'],aggfunc="mean")
+# da
+de=de.melt(id_vars="diagnosis",value_vars=['fractal_dimension_worst','area_worst','compactness_worst','texture_worst','compactness_se','compactness_mean','area_mean','texture_mean'])
+# de
+fig=line_polar(de,r="value",theta="variable",color="diagnosis",line_close=True,color_discrete_map=({"Malignant":"tomato","Benign":"blue"}),title="A Spider plot that compares the Effect Malignant cells VS Benign cells ")
+write(fig)
+
+df=read_csv(r"C:\Users\USER\Downloads\Cancer_Data.csv")
+df.reset_index(drop=True,inplace=True)
+
+a=df.groupby("diagnosis")["diagnosis"].value_counts()
+d=DataFrame(a)
+d.reset_index(inplace=True)
+# d["diagnosis"]=df["diagnosis"].map({"M":"Malignant","B":"Benign"})
+fig=pie(d,values="count",color="diagnosis",hole=0.3,title="This Chat tells the percentage of patients with various types of tumors")
+
+fig=fig.update_traces(textposition="inside",textinfo="percent")
+write(fig)
+
+
+
+
+
+
+# fig= pie(df,x)
+
+
+
+
+
+
+# #heat map
+
+# df.set_index(df["diagnosis"],inplace=True)
+# df.corr()
+# # df.figure(figsize=(12,10))
+# write(heatmap(df.corr(),linecolor="y",linewidths=2 ))
+
+
+
+
+
+
+# df.drop(["new_cancer_recordUnnamed: 32","id"],axis=1,inplace=True)
+# df["zscore"]=abs(zscore(df["area_mean"]))
+
+# # x=df[['fractal_dimension_worst','area_worst','compactness_worst','texture_worst','compactness_se','compactness_mean','area_mean','texture_mean']]
+# x=df.select_dtypes("number")
+# df["diagnosis"]=LabelEncoder().fit_transform(df["diagnosis"])
+
+# ytarget=df["diagnosis"]
+
+# model=GradientBoostingClassifier().fit(x,ytarget)
+
+# pred=model.predict(new_cancer_record)
+
+
+
+
+
+
+
